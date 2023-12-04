@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: Code/Catalog.API/Dockerfile
-    depends_on:
-      - serviceworker
     networks:
       otel:
 
@@ -15,8 +13,8 @@ services:
       context: .
       dockerfile: Code/Basket.API/Dockerfile
     depends_on:
-      - rabbitmq
-      - serviceworker
+      rabbitmq:
+        condition: service_healthy # wait for rabbitmq to be healthy
     networks:
       otel:
 
@@ -27,7 +25,8 @@ services:
       dockerfile: Code/ServiceWorker/Dockerfile
     restart: always
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy # wait for rabbitmq to be healthy
     networks:
       otel:
       
@@ -145,6 +144,11 @@ services:
     ports:
       - 5672:5672
       - 15672:15672
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 20s
+      retries: 5
     networks:
       otel:
 
